@@ -5,6 +5,24 @@ import { computeCellSize } from './layout.js';
 // 넘칠 때만 이 값까지 낮춰 판 전체가 들어오게 한다.
 const FALLBACK_MIN_CELL = 18;
 
+// 뱃지와 선택 사각형 사이 여백(px)
+const BADGE_GAP = 6;
+
+// DOM에 의존하지 않는 순수 계산. computeCellSize의 MIN_CELL 하한이 가용 영역을
+// 넘어서게 만들면 하한을 18px까지 낮춰 다시 계산한다. 그래도 넘치면 더는
+// 낮추지 않는다(18px 아래로는 손가락으로 누를 수 없다).
+export function computeFittedCell(availW, availH, cols, rows) {
+  let cell = computeCellSize(availW, availH, cols, rows);
+
+  if (cell * cols > availW || cell * rows > availH) {
+    const byWidth = Math.floor(availW / cols);
+    const byHeight = Math.floor(availH / rows);
+    cell = Math.max(FALLBACK_MIN_CELL, Math.min(byWidth, byHeight));
+  }
+
+  return cell;
+}
+
 export function fitBoard(boardEl, wrapEl, cols, rows) {
   const style = getComputedStyle(wrapEl);
   const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
@@ -12,16 +30,7 @@ export function fitBoard(boardEl, wrapEl, cols, rows) {
   const availW = wrapEl.clientWidth - padX;
   const availH = wrapEl.clientHeight - padY;
 
-  let cell = computeCellSize(availW, availH, cols, rows);
-
-  // computeCellSize의 하한(MIN_CELL=26)이 가용 영역을 넘어서게 만들면
-  // 하한을 18px까지 낮춰 다시 계산한다. 그래도 넘치면 더는 낮추지 않는다
-  // (18px 아래로는 손가락으로 누를 수 없다).
-  if (cell * cols > availW || cell * rows > availH) {
-    const byWidth = Math.floor(availW / cols);
-    const byHeight = Math.floor(availH / rows);
-    cell = Math.max(FALLBACK_MIN_CELL, Math.min(byWidth, byHeight));
-  }
+  const cell = computeFittedCell(availW, availH, cols, rows);
 
   boardEl.style.setProperty('--cell', `${cell}px`);
   boardEl.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
@@ -76,11 +85,23 @@ export function showSelection(selEl, badgeEl, rect, origin, count) {
   selEl.style.height = `${h}px`;
   selEl.hidden = false;
 
-  // 손가락이 가리지 않도록 사각형 위쪽 바깥에 붙인다
+  // 뱃지 크기를 실측하려면 먼저 보이게 하고 내용을 채운 뒤 측정한다
   badgeEl.textContent = `${count}개`;
-  badgeEl.style.left = `${x}px`;
-  badgeEl.style.top = `${Math.max(0, y - 30)}px`;
   badgeEl.hidden = false;
+  const badgeRect = badgeEl.getBoundingClientRect();
+  const badgeW = badgeRect.width;
+  const badgeH = badgeRect.height;
+
+  // 세로: 사각형 위쪽에 자리가 있으면 위, 없으면 아래로 붙여 절대 겹치지 않게 한다
+  let badgeY = y - BADGE_GAP - badgeH;
+  if (badgeY < 0) badgeY = y + h + BADGE_GAP;
+  badgeY = Math.max(0, Math.min(badgeY, wrapRect.height - badgeH));
+
+  // 가로: #board-wrap의 overflow:hidden 경계 안에 뱃지 전체가 들어오게 제한한다
+  const badgeX = Math.max(0, Math.min(x, wrapRect.width - badgeW));
+
+  badgeEl.style.left = `${badgeX}px`;
+  badgeEl.style.top = `${badgeY}px`;
 }
 
 export function hideSelection(selEl, badgeEl) {
