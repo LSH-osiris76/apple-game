@@ -1,0 +1,15 @@
+{
+  "name": "apple-game",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "시간제한 없는 사과게임",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "serve": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
