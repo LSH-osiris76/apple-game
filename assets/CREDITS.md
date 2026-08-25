@@ -18,7 +18,12 @@ Scholz' Künstler-Bilderbücher, Mainz, 1905
 
 ## 아이콘
 
-`tools/make_icons.py`로 직접 생성함.
+`tools/make_icons.py`로 직접 생성함. 실행 위치와 무관하게 항상 이 디렉터리(`assets/`)에 저장된다.
+
+실행 방법:
+```bash
+python3 tools/make_icons.py
+```
 
 ## 사용하지 않은 것
 

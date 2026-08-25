@@ -1,4 +1,11 @@
-"""사과 아이콘 PNG 두 종을 생성한다. 외부 SVG 변환기 없이 Pillow만 쓴다."""
+"""사과 아이콘 PNG 두 종을 생성한다. 외부 SVG 변환기 없이 Pillow만 쓴다.
+
+실행 위치와 무관하게 항상 저장소의 assets/ 폴더에 저장한다.
+- cd tools && python3 make_icons.py
+- python3 tools/make_icons.py
+모두 동일한 결과를 생성한다.
+"""
+import os
 from PIL import Image, ImageDraw
 
 BG = (250, 245, 235)
@@ -30,6 +37,9 @@ def draw_apple(size: int) -> Image.Image:
     return im
 
 
+ASSETS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
+
 for n in (192, 512):
-    draw_apple(n).save(f"../assets/icon-{n}.png")
+    output_path = os.path.join(ASSETS_DIR, f"icon-{n}.png")
+    draw_apple(n).save(output_path)
     print(f"icon-{n}.png 생성")
