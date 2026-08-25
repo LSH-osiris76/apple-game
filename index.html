@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#c62828">
+<title>사과게임 — 시간제한 없음</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-screen="intro">
+
+<section id="screen-intro" class="screen">
+  <img id="intro-image" alt="">
+  <p id="intro-caption"></p>
+  <div id="intro-dots" aria-hidden="true"></div>
+  <button id="intro-skip" type="button">건너뛰기</button>
+</section>
+
+<section id="screen-menu" class="screen">
+  <h1>사과게임</h1>
+  <p class="lead">사각형 안 숫자의 합이 <b>10</b>이면 사과가 사라집니다.<br>시간제한은 없습니다.</p>
+  <div class="levels">
+    <button class="level-btn" type="button" data-level="easy">
+      <span class="lv">하</span><span class="meta">8 × 6 · 7~10세</span>
+    </button>
+    <button class="level-btn" type="button" data-level="normal">
+      <span class="lv">중</span><span class="meta">12 × 8 · 초등 고학년~중학교</span>
+    </button>
+    <button class="level-btn" type="button" data-level="hard">
+      <span class="lv">상</span><span class="meta">17 × 10 · 고등학교~대학교 · 가로 전용</span>
+    </button>
+    <button class="level-btn" type="button" data-level="expert">
+      <span class="lv">최상</span><span class="meta">20 × 12 · 가로 전용</span>
+    </button>
+  </div>
+</section>
+
+<section id="screen-game" class="screen">
+  <header class="hud">
+    <span id="hud-level"></span>
+    <span id="hud-cleared"></span>
+    <button id="game-menu" type="button">그만두기</button>
+  </header>
+  <div id="board-wrap">
+    <div id="board"></div>
+    <div id="selection" hidden></div>
+    <div id="count-badge" hidden></div>
+  </div>
+</section>
+
+<section id="screen-result" class="screen">
+  <img id="result-image" alt="">
+  <h2 id="result-title"></h2>
+  <p id="result-score"></p>
+  <div class="result-actions">
+    <button id="result-retry" type="button">다시 하기</button>
+    <button id="result-menu" type="button">난이도 고르기</button>
+  </div>
+</section>
+
+<div id="rotate-notice" hidden>
+  <p>가로로 돌려 주세요</p>
+  <p class="sub">이 난이도는 가로 화면에서만 할 수 있습니다</p>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
