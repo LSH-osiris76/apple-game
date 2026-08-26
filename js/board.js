@@ -11,8 +11,8 @@
 export const LEVELS = {
   easy:   { label: '하',   cols:  8, rows:  6, tilingRate: 1.0, difficulty:  20 },
   normal: { label: '중',   cols: 12, rows:  8, tilingRate: 1.0, difficulty:  50 },
-  hard:   { label: '상',   cols: 17, rows: 10, tilingRate: 0.8, difficulty:  80 },
-  expert: { label: '최상', cols: 20, rows: 12, tilingRate: 0.8, difficulty: 100 },
+  hard:   { label: '상',   cols: 12, rows: 16, tilingRate: 0.8, difficulty:  80 },
+  expert: { label: '최상', cols: 12, rows: 20, tilingRate: 0.8, difficulty: 100 },
 };
 
 // 타일 폭 w의 가중치. 인덱스 0이 w=1. 면적은 2w칸.

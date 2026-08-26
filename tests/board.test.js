@@ -17,8 +17,8 @@ describe('LEVELS', () => {
   it('네 단계의 격자 크기가 스펙과 같다', () => {
     expect([LEVELS.easy.cols, LEVELS.easy.rows]).toEqual([8, 6]);
     expect([LEVELS.normal.cols, LEVELS.normal.rows]).toEqual([12, 8]);
-    expect([LEVELS.hard.cols, LEVELS.hard.rows]).toEqual([17, 10]);
-    expect([LEVELS.expert.cols, LEVELS.expert.rows]).toEqual([20, 12]);
+    expect([LEVELS.hard.cols, LEVELS.hard.rows]).toEqual([12, 16]);
+    expect([LEVELS.expert.cols, LEVELS.expert.rows]).toEqual([12, 20]);
   });
 
   it('네 단계 모두 세로가 짝수다 (띠 타일링의 전제)', () => {
@@ -146,7 +146,7 @@ describe('tileBoard — 덮기(covering) 검증', () => {
     });
   }
 
-  it('hard(17열, 홀수)에서도 빈틈이 남지 않는다', () => {
+  it('hard(12열)에서도 빈틈이 남지 않는다', () => {
     const { cols, rows } = LEVELS.hard;
     for (let t = 0; t < 50; t++) {
       const { tiles } = tileBoard('hard', Math.random);
@@ -159,6 +159,33 @@ describe('tileBoard — 덮기(covering) 검증', () => {
         }
       }
       expect(covered.every((n) => n === 1)).toBe(true);
+    }
+  });
+
+  it('임의 홀수 열(13열)로 직접 호출해도 빈틈·겹침이 없다 (홀수 폭 처리 로직 검증)', () => {
+    // tileBoard는 level 이름으로 LEVELS/WIDTH_DIST를 찾으므로, 검증용 임시
+    // 항목(13열·짝수 행)을 등록해 tileBoard를 직접 호출한 뒤 되돌린다.
+    const cols = 13;
+    const rows = 8;
+    LEVELS.__oddColsTest__ = { label: '홀수테스트', cols, rows, tilingRate: 1.0, difficulty: 0 };
+    WIDTH_DIST.__oddColsTest__ = WIDTH_DIST.hard;
+
+    try {
+      for (let t = 0; t < 50; t++) {
+        const { tiles } = tileBoard('__oddColsTest__', Math.random);
+        const covered = new Array(cols * rows).fill(0);
+        for (const { c1, r1, c2, r2 } of tiles) {
+          for (let r = r1; r <= r2; r++) {
+            for (let c = c1; c <= c2; c++) {
+              covered[r * cols + c] += 1;
+            }
+          }
+        }
+        expect(covered.every((n) => n === 1)).toBe(true);
+      }
+    } finally {
+      delete LEVELS.__oddColsTest__;
+      delete WIDTH_DIST.__oddColsTest__;
     }
   });
 });
@@ -185,7 +212,7 @@ describe('createBoard', () => {
   it('난이도별 칸 수가 맞는다', () => {
     expect(createBoard('easy').grid).toHaveLength(48);
     expect(createBoard('normal').grid).toHaveLength(96);
-    expect(createBoard('hard').grid).toHaveLength(170);
+    expect(createBoard('hard').grid).toHaveLength(192);
     expect(createBoard('expert').grid).toHaveLength(240);
   });
 
