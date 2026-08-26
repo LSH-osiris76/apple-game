@@ -2,14 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { computeFittedCell } from '../js/render.js';
 
 describe('computeFittedCell — 좁은 화면 넘침 방지', () => {
-  it('expert 20x12, 가용 643x307 → MIN_CELL(26) 하한을 넘치는 경우 18px 바닥까지 낮춰 25로 맞춘다', () => {
+  it('가로로 넓은 판 20x12, 가용 643x307 → MIN_CELL(26) 하한을 넘치는 경우 18px 바닥까지 낮춰 25로 맞춘다', () => {
     const cell = computeFittedCell(643, 307, 20, 12);
     expect(cell).toBe(25);
     expect(cell * 20).toBeLessThanOrEqual(643);
     expect(cell * 12).toBeLessThanOrEqual(307);
   });
 
-  it('easy 8x6, 가용 800x600 → 넘치지 않으므로 하한 26 이상(64)을 그대로 유지한다', () => {
+  it('세로로 긴 판 8x6, 가용 800x600 → 넘치지 않으므로 하한 26 이상(64)을 그대로 유지한다', () => {
     const cell = computeFittedCell(800, 600, 8, 6);
     expect(cell).toBe(64);
     expect(cell).toBeGreaterThanOrEqual(26);
@@ -37,19 +37,19 @@ describe('computeFittedCell — 좁은 화면 넘침 방지', () => {
 });
 
 describe('computeFittedCell — task-14: 넘칠 때 하한 완전 해제', () => {
-  it('expert 20x12, 가용 336x732 (갤럭시 S 세로) → 잘리지 않는다', () => {
+  it('가로로 넓은 판 20x12, 가용 336x732 (갤럭시 S 세로) → 잘리지 않는다', () => {
     const cell = computeFittedCell(336, 732, 20, 12);
     expect(cell * 20).toBeLessThanOrEqual(336);
     expect(cell * 12).toBeLessThanOrEqual(732);
   });
 
-  it('expert 20x12, 가용 351x599 (아이폰 SE 세로) → 잘리지 않는다', () => {
+  it('가로로 넓은 판 20x12, 가용 351x599 (아이폰 SE 세로) → 잘리지 않는다', () => {
     const cell = computeFittedCell(351, 599, 20, 12);
     expect(cell * 20).toBeLessThanOrEqual(351);
     expect(cell * 12).toBeLessThanOrEqual(599);
   });
 
-  it('hard 17x10, 가용 296x500 (아주 좁은 폰) → 잘리지 않는다', () => {
+  it('가로로 긴 판 17x10, 가용 296x500 (아주 좁은 폰) → 잘리지 않는다', () => {
     const cell = computeFittedCell(296, 500, 17, 10);
     expect(cell * 17).toBeLessThanOrEqual(296);
     expect(cell * 10).toBeLessThanOrEqual(500);
@@ -60,5 +60,32 @@ describe('computeFittedCell — task-14: 넘칠 때 하한 완전 해제', () =>
     expect(cell).toBeGreaterThanOrEqual(1);
     expect(cell * 10).toBeLessThanOrEqual(20);
     expect(cell * 10).toBeLessThanOrEqual(12);
+  });
+});
+
+describe('computeFittedCell — 현재 배포된 격자', () => {
+  it('상 난이도 12x16, 가용 336x732 (갤럭시 S 세로) → 잘리지 않는다', () => {
+    const cell = computeFittedCell(336, 732, 12, 16);
+    expect(cell * 12).toBeLessThanOrEqual(336);
+    expect(cell * 16).toBeLessThanOrEqual(732);
+  });
+
+  it('최상 난이도 12x20, 가용 336x732 (갤럭시 S 세로) → 잘리지 않는다', () => {
+    const cell = computeFittedCell(336, 732, 12, 20);
+    expect(cell * 12).toBeLessThanOrEqual(336);
+    expect(cell * 20).toBeLessThanOrEqual(732);
+  });
+
+  it('최상 난이도 12x20, 가용 296x500 (아주 좁은 폰) → 잘리지 않는다', () => {
+    const cell = computeFittedCell(296, 500, 12, 20);
+    expect(cell * 12).toBeLessThanOrEqual(296);
+    expect(cell * 20).toBeLessThanOrEqual(500);
+  });
+
+  it('하 난이도 8x6, 가용 336x732 (갤럭시 S 세로) → 잘리지 않고 하한 26 이상', () => {
+    const cell = computeFittedCell(336, 732, 8, 6);
+    expect(cell * 8).toBeLessThanOrEqual(336);
+    expect(cell * 6).toBeLessThanOrEqual(732);
+    expect(cell).toBeGreaterThanOrEqual(26);
   });
 });

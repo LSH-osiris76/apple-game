@@ -89,7 +89,7 @@ describe('hasAnyMove', () => {
 });
 
 describe('성능', () => {
-  it('20x12 판에서 hasAnyMove가 50ms 안에 끝난다', () => {
+  it('240칸 판(20×12)에서 hasAnyMove가 50ms 안에 끝난다', () => {
     const cols = 20, rows = 12;
     const g = Array.from({ length: cols * rows }, (_, i) => (i % 9) + 1);
     const t0 = performance.now();
