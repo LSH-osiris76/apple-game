@@ -41,9 +41,15 @@ export function startIntro(onDone) {
     [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
   }
 
+  function onSkip(ev) {
+    ev.stopPropagation();
+    finish();
+  }
+
   function finish() {
     if (finished) return;
     finished = true;
+    skip.removeEventListener('click', onSkip);
     screen.removeEventListener('click', next);
     document.removeEventListener('keydown', onKey);
     onDone();
@@ -65,10 +71,7 @@ export function startIntro(onDone) {
   }
 
   // 건너뛰기는 화면 넘기기로 새지 않게 막는다
-  skip.addEventListener('click', (ev) => {
-    ev.stopPropagation();
-    finish();
-  });
+  skip.addEventListener('click', onSkip);
   screen.addEventListener('click', next);
   document.addEventListener('keydown', onKey);
 
