@@ -1,4 +1,4 @@
-import { LEVELS, createBoard } from './board.js';
+import { createBoard } from './board.js';
 import { TARGET, buildPrefix, rectSum, clearRect, hasAnyMove } from './rules.js';
 import { fitBoard, renderBoard, updateCells, boardOrigin, showSelection, hideSelection } from './render.js';
 import { attachDrag } from './drag.js';
@@ -9,7 +9,6 @@ const boardEl = $('board');
 const wrapEl = $('board-wrap');
 const selEl = $('selection');
 const badgeEl = $('count-badge');
-const rotateEl = $('rotate-notice');
 
 const state = {
   level: null,
@@ -24,15 +23,6 @@ const state = {
 
 function setScreen(name) {
   document.body.dataset.screen = name;
-  checkOrientation();
-}
-
-/* ── 가로 전용 처리 ── */
-function checkOrientation() {
-  const inGame = document.body.dataset.screen === 'game';
-  const needsLandscape = inGame && state.level && LEVELS[state.level].landscapeOnly;
-  const isPortrait = window.innerHeight > window.innerWidth;
-  rotateEl.hidden = !(needsLandscape && isPortrait);
 }
 
 /* ── 게임 시작 ── */
@@ -131,8 +121,14 @@ $('result-retry').addEventListener('click', () => startGame(state.level));
 $('result-menu').addEventListener('click', () => setScreen('menu'));
 
 window.addEventListener('resize', () => {
-  checkOrientation();
   if (document.body.dataset.screen === 'game') relayout();
+});
+
+window.addEventListener('orientationchange', () => {
+  // 회전 직후에는 innerWidth/Height가 아직 갱신되지 않는 브라우저가 있다
+  setTimeout(() => {
+    if (document.body.dataset.screen === 'game') relayout();
+  }, 100);
 });
 
 startIntro(() => setScreen('menu'));

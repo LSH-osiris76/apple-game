@@ -25,9 +25,40 @@ describe('computeFittedCell — 좁은 화면 넘침 방지', () => {
     expect(cell).toBe(30);
   });
 
-  it('아주 좁은 화면 20x12, 가용 200x150 → 18px 바닥에서 멈춘다', () => {
+  it('아주 좁은 화면 20x12, 가용 200x150 → 18px도 넘치므로 하한을 풀어 10으로 맞춘다', () => {
+    // task-14: 18px 바닥이어도 넘치면(360>200) 더는 하한에 묶이지 않고
+    // 가용 영역 안으로 낮춘다. 판이 잘려 눌리지 않는 열이 생기는 쪽이
+    // 손가락으로 누르기 불편한 것보다 훨씬 나쁘기 때문이다.
     const cell = computeFittedCell(200, 150, 20, 12);
-    expect(cell).toBe(18);
-    expect(cell).toBeGreaterThanOrEqual(18);
+    expect(cell).toBe(10);
+    expect(cell * 20).toBeLessThanOrEqual(200);
+    expect(cell * 12).toBeLessThanOrEqual(150);
+  });
+});
+
+describe('computeFittedCell — task-14: 넘칠 때 하한 완전 해제', () => {
+  it('expert 20x12, 가용 336x732 (갤럭시 S 세로) → 잘리지 않는다', () => {
+    const cell = computeFittedCell(336, 732, 20, 12);
+    expect(cell * 20).toBeLessThanOrEqual(336);
+    expect(cell * 12).toBeLessThanOrEqual(732);
+  });
+
+  it('expert 20x12, 가용 351x599 (아이폰 SE 세로) → 잘리지 않는다', () => {
+    const cell = computeFittedCell(351, 599, 20, 12);
+    expect(cell * 20).toBeLessThanOrEqual(351);
+    expect(cell * 12).toBeLessThanOrEqual(599);
+  });
+
+  it('hard 17x10, 가용 296x500 (아주 좁은 폰) → 잘리지 않는다', () => {
+    const cell = computeFittedCell(296, 500, 17, 10);
+    expect(cell * 17).toBeLessThanOrEqual(296);
+    expect(cell * 10).toBeLessThanOrEqual(500);
+  });
+
+  it('극단적으로 작은 가용 20x12, cols/rows 10x10 → 최소 1 이상이고 잘리지 않는다', () => {
+    const cell = computeFittedCell(20, 12, 10, 10);
+    expect(cell).toBeGreaterThanOrEqual(1);
+    expect(cell * 10).toBeLessThanOrEqual(20);
+    expect(cell * 10).toBeLessThanOrEqual(12);
   });
 });

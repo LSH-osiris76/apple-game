@@ -158,13 +158,3 @@ body[data-screen="result"] #screen-result{ display:flex; }
   background:#fff; font:inherit; cursor:pointer;
 }
 #result-retry{ background:var(--red); border-color:var(--red); color:#fff; }
-
-/* ── 가로 전용 안내 ── */
-#rotate-notice{
-  position:fixed; inset:0; z-index:50;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:8px; background:var(--paper); text-align:center; padding:24px;
-}
-#rotate-notice[hidden]{ display:none; }
-#rotate-notice p{ margin:0; font-size:clamp(1.2rem,5vw,1.6rem); }
-#rotate-notice .sub{ font-size:.95rem; color:var(--ink-soft); }

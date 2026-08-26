@@ -9,8 +9,11 @@ const FALLBACK_MIN_CELL = 18;
 const BADGE_GAP = 6;
 
 // DOM에 의존하지 않는 순수 계산. computeCellSize의 MIN_CELL 하한이 가용 영역을
-// 넘어서게 만들면 하한을 18px까지 낮춰 다시 계산한다. 그래도 넘치면 더는
-// 낮추지 않는다(18px 아래로는 손가락으로 누를 수 없다).
+// 넘어서게 만들면 하한을 18px까지 낮춰 다시 계산한다. 그래도 넘치면 하한을
+// 완전히 풀어 반드시 가용 영역 안에 들어오게 한다 — #board-wrap이
+// overflow:hidden이라 잘린 열은 다시 누를 수 없어 게임이 끝나지 않는
+// 상태(갇힘)가 되기 때문이다. 손가락으로 누르기 불편해지는 것보다
+// 판이 잘려 진행 불가능해지는 쪽이 훨씬 나쁘다. 최소 1px은 보장한다.
 export function computeFittedCell(availW, availH, cols, rows) {
   let cell = computeCellSize(availW, availH, cols, rows);
 
@@ -18,6 +21,10 @@ export function computeFittedCell(availW, availH, cols, rows) {
     const byWidth = Math.floor(availW / cols);
     const byHeight = Math.floor(availH / rows);
     cell = Math.max(FALLBACK_MIN_CELL, Math.min(byWidth, byHeight));
+
+    if (cell * cols > availW || cell * rows > availH) {
+      cell = Math.max(1, Math.min(byWidth, byHeight));
+    }
   }
 
   return cell;

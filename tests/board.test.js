@@ -27,13 +27,6 @@ describe('LEVELS', () => {
     }
   });
 
-  it('상·최상만 가로 전용이다', () => {
-    expect(LEVELS.easy.landscapeOnly).toBe(false);
-    expect(LEVELS.normal.landscapeOnly).toBe(false);
-    expect(LEVELS.hard.landscapeOnly).toBe(true);
-    expect(LEVELS.expert.landscapeOnly).toBe(true);
-  });
-
   it('하·중은 tilingRate 1.0, 상·최상은 0.8이다', () => {
     expect(LEVELS.easy.tilingRate).toBe(1.0);
     expect(LEVELS.normal.tilingRate).toBe(1.0);
@@ -210,7 +203,6 @@ describe('createBoard', () => {
     expect(b.cols).toBe(12);
     expect(b.rows).toBe(8);
     expect(b.label).toBe('중');
-    expect(b.landscapeOnly).toBe(false);
   });
 
   it('하·중은 100번 생성해도 항상 guaranteed === true', () => {
