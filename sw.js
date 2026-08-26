@@ -21,7 +21,14 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (ev) => {
-  ev.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
+  ev.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(ASSETS))
+      .catch((err) => {
+        console.error('[SW] Cache install failed:', err.message);
+        throw err;
+      })
+  );
   self.skipWaiting();
 });
 
@@ -36,6 +43,16 @@ self.addEventListener('activate', (ev) => {
 
 self.addEventListener('fetch', (ev) => {
   if (ev.request.method !== 'GET') return;
+
+  if (ev.request.mode === 'navigate') {
+    ev.respondWith(
+      caches.match(ev.request).then((hit) =>
+        hit || fetch(ev.request).catch(() => caches.match('./index.html'))
+      )
+    );
+    return;
+  }
+
   ev.respondWith(
     caches.match(ev.request).then((hit) => hit || fetch(ev.request))
   );
