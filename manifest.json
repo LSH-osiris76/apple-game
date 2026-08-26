@@ -1,0 +1,17 @@
+{
+  "name": "사과게임 — 시간제한 없음",
+  "short_name": "사과게임",
+  "description": "합이 10이 되는 사과를 지우는 게임. 시간제한이 없습니다.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#faf5eb",
+  "theme_color": "#c62828",
+  "lang": "ko",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
