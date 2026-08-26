@@ -262,4 +262,17 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
+
+  // 새 서비스워커가 제어권을 가져가면 페이지를 한 번만 새로고침한다.
+  // 그래야 HTML·CSS·JS가 전부 같은 버전으로 맞춰진다 — skipWaiting()·
+  // clients.claim() 때문에 새 SW가 페이지를 읽는 도중 제어권을 가져가면
+  // 옛 HTML과 새 JS가 섞여 새 JS가 옛 HTML에 없는 요소를 찾다가 죽을
+  // 수 있다. swReloading 가드가 없으면 controllerchange가 반복될 때마다
+  // reload → 새 등록 → controllerchange → reload로 무한 루프에 빠진다.
+  let swReloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (swReloading) return;
+    swReloading = true;
+    location.reload();
+  });
 }

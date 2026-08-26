@@ -1,4 +1,4 @@
-const CACHE = 'apple-game-v5';
+const CACHE = 'apple-game-v6';
 const ASSETS = [
   './',
   './index.html',
@@ -23,7 +23,13 @@ const ASSETS = [
 self.addEventListener('install', (ev) => {
   ev.waitUntil(
     caches.open(CACHE)
-      .then((c) => c.addAll(ASSETS))
+      .then((c) => {
+        // addAll(ASSETS)는 브라우저 HTTP 캐시를 그대로 쓴다. GitHub Pages가
+        // 캐싱 헤더를 보내므로, 새 버전을 설치하면서도 옛 파일을 SW 캐시에
+        // 담을 수 있다. cache:'reload'로 각 요청을 HTTP 캐시 우회해 받는다.
+        const reqs = ASSETS.map((u) => new Request(u, { cache: 'reload' }));
+        return c.addAll(reqs);
+      })
       .catch((err) => {
         console.error('[SW] Cache install failed:', err.message);
         throw err;

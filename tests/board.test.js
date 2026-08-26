@@ -2,10 +2,13 @@ import { describe, it, expect } from 'vitest';
 import {
   LEVELS,
   WIDTH_DIST,
+  HEIGHT_DIST,
+  MODE_DIST,
   WEIGHTS,
   pickWeighted,
   splitTen,
   tileBoard,
+  bandHeights,
   randomBoard,
   createBoard,
 } from '../js/board.js';
@@ -48,6 +51,40 @@ describe('WIDTH_DIST', () => {
       const dist = WIDTH_DIST[level];
       expect(dist).toHaveLength(4);
       expect(sum(dist)).toBe(100);
+    }
+  });
+});
+
+describe('HEIGHT_DIST', () => {
+  it('네 세트 모두 길이 3이고(h=2,3,4) 합이 100이다', () => {
+    for (const level of LEVEL_KEYS) {
+      const dist = HEIGHT_DIST[level];
+      expect(dist).toHaveLength(3);
+      expect(sum(dist)).toBe(100);
+    }
+  });
+});
+
+describe('MODE_DIST', () => {
+  it('네 세트 모두 길이 3이고([cols, rows, whole]) 합이 100이다', () => {
+    for (const level of LEVEL_KEYS) {
+      const dist = MODE_DIST[level];
+      expect(dist).toHaveLength(3);
+      expect(sum(dist)).toBe(100);
+    }
+  });
+});
+
+describe('bandHeights — 띠 높이 분할', () => {
+  it('실제 격자 세로(6·8·16·20) 어디서도 나머지 1을 남기지 않는다', () => {
+    for (const rows of [6, 8, 16, 20]) {
+      for (let t = 0; t < 200; t++) {
+        const heights = bandHeights(rows, HEIGHT_DIST.hard, Math.random);
+        expect(sum(heights)).toBe(rows);
+        for (const h of heights) {
+          expect([2, 3, 4]).toContain(h);
+        }
+      }
     }
   });
 });
@@ -100,6 +137,111 @@ describe('splitTen', () => {
   });
 });
 
+describe('타일 모양 다양화 — cols/rows/whole', () => {
+  it('w=1 구간은 항상 cols로 처리된다 (MODE_DIST에서 cols 확률이 0이어도)', () => {
+    // w=1을 강제하는 WIDTH_DIST와, cols 가중치를 0으로 둔 MODE_DIST를
+    // 임시 등록한다. 그래도 w=1 구간은 MODE_DIST를 무시하고 cols로 가야
+    // 한다 — 한 칸으로는 합 10을 만들 수 없기 때문이다.
+    LEVELS.__forceW1Test__ = { label: 'w1테스트', cols: 8, rows: 6, tilingRate: 1.0, difficulty: 0 };
+    WIDTH_DIST.__forceW1Test__ = [100, 0, 0, 0]; // 항상 w=1
+    HEIGHT_DIST.__forceW1Test__ = HEIGHT_DIST.hard;
+    MODE_DIST.__forceW1Test__ = [0, 50, 50]; // cols 가중치 0 — rows·whole만 원함
+
+    try {
+      for (let t = 0; t < 30; t++) {
+        const { tiles } = tileBoard('__forceW1Test__', Math.random);
+        for (const tile of tiles) {
+          expect(tile.mode).toBe('cols');
+          expect(tile.c2 - tile.c1 + 1).toBe(1);
+        }
+      }
+    } finally {
+      delete LEVELS.__forceW1Test__;
+      delete WIDTH_DIST.__forceW1Test__;
+      delete HEIGHT_DIST.__forceW1Test__;
+      delete MODE_DIST.__forceW1Test__;
+    }
+  });
+
+  it('h*w > 8인 구간에는 whole이 쓰이지 않는다', () => {
+    for (const level of LEVEL_KEYS) {
+      for (let t = 0; t < 30; t++) {
+        const { tiles } = tileBoard(level, Math.random);
+        for (const tile of tiles) {
+          if (tile.mode !== 'whole') continue;
+          const area = (tile.c2 - tile.c1 + 1) * (tile.r2 - tile.r1 + 1);
+          expect(area).toBeLessThanOrEqual(8);
+        }
+      }
+    }
+  });
+
+  it('cols로 만든 타일은 폭 1·높이 h(2~4)이고 합이 10이다', () => {
+    for (const level of LEVEL_KEYS) {
+      for (let t = 0; t < 30; t++) {
+        const { grid, tiles } = tileBoard(level, Math.random);
+        const { cols } = LEVELS[level];
+        for (const tile of tiles) {
+          if (tile.mode !== 'cols') continue;
+          const w = tile.c2 - tile.c1 + 1;
+          const h = tile.r2 - tile.r1 + 1;
+          expect(w).toBe(1);
+          expect(h).toBeGreaterThanOrEqual(2);
+          expect(h).toBeLessThanOrEqual(4);
+
+          let s = 0;
+          for (let r = tile.r1; r <= tile.r2; r++) s += grid[r * cols + tile.c1];
+          expect(s).toBe(10);
+        }
+      }
+    }
+  });
+
+  it('rows로 만든 타일은 높이 1·폭 w(2~4)이고, 각 줄(윗줄·아랫줄 등)의 합이 10이다', () => {
+    for (const level of LEVEL_KEYS) {
+      for (let t = 0; t < 30; t++) {
+        const { grid, tiles } = tileBoard(level, Math.random);
+        const { cols } = LEVELS[level];
+        for (const tile of tiles) {
+          if (tile.mode !== 'rows') continue;
+          const w = tile.c2 - tile.c1 + 1;
+          const h = tile.r2 - tile.r1 + 1;
+          expect(h).toBe(1);
+          expect(w).toBeGreaterThanOrEqual(2);
+          expect(w).toBeLessThanOrEqual(4);
+
+          let s = 0;
+          for (let c = tile.c1; c <= tile.c2; c++) s += grid[tile.r1 * cols + c];
+          expect(s).toBe(10);
+        }
+      }
+    }
+  });
+});
+
+describe('세로 인접 짝 합10 비율 — 하 난이도 회귀 테스트', () => {
+  // 제보: "세로로 인접한 두 칸의 합이 10"인 패턴이 반복돼 아이가 규칙을
+  // 바로 알아채 버렸다. 모양을 cols 하나로만 채우던 구버전은 이 비율이
+  // 90%를 넘었다(측정: 55.8%, 격자 전체 평균). 모양을 cols·rows·whole로
+  // 섞은 뒤에는 크게 떨어져야 한다.
+  it('하 난이도 판에서 세로 인접 짝이 전부(또는 대부분) 합 10인 것은 아니다', () => {
+    const { cols, rows } = LEVELS.easy;
+    let total = 0;
+    let sum10 = 0;
+    for (let t = 0; t < 200; t++) {
+      const { grid } = createBoard('easy');
+      for (let r = 0; r < rows - 1; r++) {
+        for (let c = 0; c < cols; c++) {
+          total++;
+          if (grid[r * cols + c] + grid[(r + 1) * cols + c] === 10) sum10++;
+        }
+      }
+    }
+    const ratio = sum10 / total;
+    expect(ratio).toBeLessThan(0.5);
+  });
+});
+
 describe('tileBoard — 덮기(covering) 검증', () => {
   for (const level of LEVEL_KEYS) {
     it(`${level}: 타일이 격자를 빈틈·겹침 없이 정확히 덮는다`, () => {
@@ -123,7 +265,10 @@ describe('tileBoard — 덮기(covering) 검증', () => {
       }
     });
 
-    it(`${level}: 각 타일의 폭 1~4, 높이 2, 합 10`, () => {
+    // 모양이 cols(세로, h×1)·rows(가로, 1×w)·whole(덩어리, h×w)로
+    // 다양화되면서 타일 높이가 2 고정에서 1~4로 넓어졌다. 폭 1~4·합 10은
+    // 세 모양 모두에서 그대로 지켜야 하는 불변식이라 계속 검증한다.
+    it(`${level}: 각 타일의 폭 1~4, 높이 1~4, 합 10`, () => {
       for (let t = 0; t < 20; t++) {
         const { grid, tiles } = tileBoard(level, Math.random);
         const { cols } = LEVELS[level];
@@ -132,7 +277,8 @@ describe('tileBoard — 덮기(covering) 검증', () => {
           const h = r2 - r1 + 1;
           expect(w).toBeGreaterThanOrEqual(1);
           expect(w).toBeLessThanOrEqual(4);
-          expect(h).toBe(2);
+          expect(h).toBeGreaterThanOrEqual(1);
+          expect(h).toBeLessThanOrEqual(4);
 
           let tileSum = 0;
           for (let r = r1; r <= r2; r++) {
