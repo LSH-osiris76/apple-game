@@ -1,4 +1,4 @@
-const CACHE = 'apple-game-v2';
+const CACHE = 'apple-game-v3';
 const ASSETS = [
   './',
   './index.html',

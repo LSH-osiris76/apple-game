@@ -60,12 +60,23 @@ body[data-screen="result"] #screen-result{ display:flex; }
 /* ── 난이도 선택 ── */
 #screen-menu{
   flex-direction:column; align-items:center; justify-content:center;
-  gap:10px; padding:32px 16px;
+  gap:8px; padding:20px 16px;
 }
-#screen-menu h1{ margin:0; font-size:clamp(2rem,7vw,2.8rem); }
-.lead{ margin:0 0 14px; text-align:center; color:var(--ink-soft); line-height:1.6; }
+#screen-menu h1{ margin:0; font-size:clamp(1.6rem,7vw,2.8rem); }
+.lead{ margin:0 0 8px; text-align:center; color:var(--ink-soft); line-height:1.5; }
 .lead b{ color:var(--red); }
-.levels{ display:grid; gap:10px; width:min(420px,100%); }
+.howto{
+  width:min(420px,100%); margin:0 0 8px; padding:8px 12px;
+  border:1px solid var(--line); border-radius:10px;
+  font-size:.82rem; line-height:1.45; color:var(--ink-soft);
+}
+.howto-title{ margin:0 0 4px; font-weight:700; }
+.howto ol{ margin:0 0 4px; padding-left:1.15em; }
+.howto li{ margin:0; }
+.howto li + li{ margin-top:2px; }
+.howto li b{ color:var(--ink); }
+.howto-warn{ margin:0; color:var(--red); font-size:.78rem; }
+.levels{ display:grid; gap:8px; width:min(420px,100%); }
 .level-btn{
   display:flex; align-items:baseline; gap:12px;
   padding:14px 18px; border:1.5px solid var(--line); border-radius:12px;

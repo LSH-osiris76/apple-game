@@ -25,6 +25,23 @@ function setScreen(name) {
   document.body.dataset.screen = name;
 }
 
+/* ── origin 갱신 ──
+   relayout()은 resize/orientationchange에서만 돈다. 모바일에서는 주소창이
+   숨거나 나타나며 판의 화면상 위치가 바뀌는데 resize가 안 오거나 늦게 온다.
+   그러면 저장된 origin이 실제 위치와 어긋난 채로 남아 드래그 좌표가 통째로 밀린다.
+   손가락이 닿는 순간(pointerdown) origin을 다시 읽어 이를 보정한다.
+   drag.js가 같은 pointerdown에서 시작 칸을 계산하므로, 그보다 먼저 돌아야
+   해서 캡처 단계(true)로 단다. pointermove마다 하지 않는 이유는
+   getBoundingClientRect()를 매 프레임 부르면 레이아웃이 반복 계산되어
+   드래그가 끊기기 때문이다 — 드래그 중에는 touch-action:none이라 판이
+   움직이지 않으므로 시작 시점 한 번이면 충분하다.
+   startGame은 매번 불리지만 이 리스너는 boardEl에 게임 내내 붙어 있어도
+   무해하므로, startGame 밖에서 한 번만 등록한다(중복 등록 방지). */
+function refreshOrigin() {
+  state.origin = boardOrigin(boardEl);
+}
+boardEl.addEventListener('pointerdown', refreshOrigin, true);
+
 /* ── 게임 시작 ── */
 function startGame(level) {
   const b = createBoard(level);
