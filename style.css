@@ -140,6 +140,16 @@ body[data-screen="result"] #screen-result{ display:flex; }
   border-radius:4px;
   background:rgba(107,91,74,.10);
 }
+/* 합이 10이 아닐 때 손을 뗀 뒤: 색은 그대로 두고 흔들기만 한다 */
+#selection.shake{ animation:shake .2s ease-in-out; }
+@keyframes shake{
+  0%,100%{ transform:translateX(0); }
+  25%{ transform:translateX(-4px); }
+  75%{ transform:translateX(4px); }
+}
+@media (prefers-reduced-motion:reduce){
+  #selection.shake{ animation:none; }
+}
 #count-badge{
   position:absolute; pointer-events:none;
   padding:3px 9px; border-radius:999px;
@@ -152,6 +162,25 @@ body[data-screen="result"] #screen-result{ display:flex; }
   .cell.popping .apple{ animation:none; opacity:0; }
 }
 
+/* 막힘 오버레이 — 판을 지우지 않고 그 위에 반투명하게 덮는다.
+   #board-wrap 안에서 #board보다 뒤에 나오므로 별도 z-index 없이 위에 뜬다.
+   포인터 이벤트를 오버레이가 가로채 아래 판에 드래그가 먹지 않는다. */
+#stuck-overlay{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:8px; padding:20px; text-align:center;
+  background:rgba(250,245,235,.88);
+}
+.stuck-title{ margin:0 0 4px; font-size:clamp(1.1rem,4.5vw,1.4rem); font-weight:700; }
+#stuck-score{ margin:0; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+#stuck-best{ margin:0; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+.stuck-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+.stuck-actions button{
+  padding:12px 22px; border-radius:10px; border:1.5px solid var(--line);
+  background:#fff; font:inherit; cursor:pointer;
+}
+#stuck-retry{ background:var(--red); border-color:var(--red); color:#fff; }
+
 /* ── 결과 ── */
 #screen-result{
   flex-direction:column; align-items:center; justify-content:center;
@@ -163,6 +192,7 @@ body[data-screen="result"] #screen-result{ display:flex; }
 }
 #result-title{ margin:0; font-size:clamp(1.4rem,5.5vw,2rem); text-align:center; }
 #result-score{ margin:0; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+#result-best{ margin:0; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
 .result-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
 .result-actions button{
   padding:12px 22px; border-radius:10px; border:1.5px solid var(--line);
