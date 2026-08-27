@@ -1,4 +1,4 @@
-const CACHE = 'apple-game-v7';
+const CACHE = 'apple-game-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ASSETS = [
   './js/render.js',
   './js/drag.js',
   './js/intro.js',
+  './js/score.js',
   './assets/intro1.jpg',
   './assets/intro2.jpg',
   './assets/intro3.jpg',

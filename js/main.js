@@ -1,8 +1,9 @@
-import { createBoard } from './board.js';
+import { createBoard, LEVELS } from './board.js';
 import { TARGET, buildPrefix, rectSum, clearRect, hasAnyMove } from './rules.js';
 import { fitBoard, renderBoard, updateCells, boardOrigin, showSelection, hideSelection } from './render.js';
 import { attachDrag } from './drag.js';
 import { startIntro } from './intro.js';
+import { computeScore, recordScore, getLevelRecords, formatDate } from './score.js';
 
 const $ = (id) => document.getElementById(id);
 const boardEl = $('board');
@@ -17,62 +18,16 @@ const state = {
   rows: 0,
   total: 0,
   cleared: 0,
+  score: 0,
   origin: { left: 0, top: 0, cell: 40 },
   detach: null,
+  lastRecord: null, // 방금 끝난 판의 {level, score, at, rank} — 기록 화면 강조에 쓴다
 };
 
 let shakeTimer = null;
 
-/* ── 최고 기록 (localStorage) ──
-   시크릿 모드·저장소 차단 설정에서는 localStorage가 예외를 던진다.
-   읽기·쓰기 모두 실패해도 게임 진행에는 영향이 없어야 하므로 전부 try/catch로 감싼다. */
-const BEST_KEY = 'apple-game-best';
-
-function loadBest() {
-  try {
-    const raw = localStorage.getItem(BEST_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return null; // 저장소 사용 불가
-  }
-}
-
-function saveBest(data) {
-  try {
-    localStorage.setItem(BEST_KEY, JSON.stringify(data));
-  } catch {
-    // 쓰기 실패는 무시한다 — 기록만 못 남을 뿐 게임은 그대로 진행된다
-  }
-}
-
-// 이번 판 결과를 반영하고 화면에 보여 줄 정보를 돌려준다.
-// 저장소를 아예 못 쓰거나(시크릿 모드) 이 난이도의 이전 기록이 없으면(첫 판)
-// show:false를 돌려주며, 호출부는 그 줄을 생략한다.
-function updateBest(level, rate) {
-  const data = loadBest();
-  if (data === null) return { show: false };
-
-  const hadPrior = Object.prototype.hasOwnProperty.call(data, level);
-  const prevBest = hadPrior ? data[level] : undefined;
-  const isNew = !hadPrior || rate > prevBest;
-  const best = isNew ? rate : prevBest;
-
-  if (isNew) {
-    data[level] = rate;
-    saveBest(data);
-  }
-
-  return { show: hadPrior, best, isNew: hadPrior && isNew };
-}
-
-function renderBestLine(el, result) {
-  if (!result || !result.show) {
-    el.hidden = true;
-    el.textContent = '';
-    return;
-  }
-  el.hidden = false;
-  el.textContent = result.isNew ? `최고 기록 갱신! ${result.best}%` : `최고 기록 ${result.best}%`;
+function formatRank(rank) {
+  return rank ? `${rank}위` : '10위 밖';
 }
 
 function setScreen(name) {
@@ -106,6 +61,7 @@ function startGame(level) {
   state.rows = b.rows;
   state.total = b.grid.length;
   state.cleared = 0;
+  state.score = 0;
 
   if (shakeTimer) {
     clearTimeout(shakeTimer);
@@ -136,6 +92,7 @@ function relayout() {
 
 function updateHud() {
   $('hud-cleared').textContent = `${state.cleared} / ${state.total}`;
+  $('hud-score').textContent = `점수 ${state.score}`;
 }
 
 /* ── 드래그 ──
@@ -191,6 +148,7 @@ function onDragEnd(rect) {
   }
 
   state.cleared += clearRect(state.grid, state.cols, rect.c1, rect.r1, rect.c2, rect.r2);
+  state.score += computeScore(indices, state.cols);
   updateCells(boardEl, state.cols, indices);
   updateHud();
 
@@ -202,45 +160,121 @@ function onDragEnd(rect) {
 /* ── 게임 종료 ──
    전부 제거는 보상이므로 결과 화면(삽화)으로 넘어간다.
    막힘은 드래그를 놓은 직후 화면이 휙 바뀌면 버그처럼 느껴지므로,
-   판을 그대로 두고 그 위에 반투명 오버레이만 띄운다. */
+   판을 그대로 두고 그 위에 반투명 오버레이만 띄운다.
+   막힘·완전 제거 둘 다 「게임이 끝난 것」이므로 기록을 저장한다.
+   「그만두기」는 이 함수를 거치지 않으므로 기록에 남지 않는다. */
 function handleGameEnd() {
+  const at = new Date().toISOString();
+  const result = recordScore(state.level, state.score, at);
+  state.lastRecord = { level: state.level, score: state.score, at, rank: result.rank };
+
   if (state.cleared === state.total) {
-    showResult();
+    showResult(state.lastRecord);
   } else {
-    showStuck();
+    showStuck(state.lastRecord);
   }
 }
 
-function showResult() {
-  const rate = Math.round((state.cleared / state.total) * 100);
-  const best = updateBest(state.level, rate);
-
+function showResult(rec) {
   $('result-image').src = 'assets/ending.jpg';
   $('result-image').alt = '깨어난 백설공주와 일곱난쟁이';
   $('result-title').textContent = '공주가 깨어났습니다';
-  $('result-score').textContent = `${state.cleared} / ${state.total} 개를 없앴습니다`;
-  renderBestLine($('result-best'), best);
+  $('result-score').textContent = `점수 ${rec.score}`;
+  $('result-rank').textContent = formatRank(rec.rank);
   setScreen('result');
 }
 
-function showStuck() {
-  const rate = Math.round((state.cleared / state.total) * 100);
-  const best = updateBest(state.level, rate);
-
-  $('stuck-score').textContent = `${state.cleared} / ${state.total} 개를 없앴어요 (${rate}%)`;
-  renderBestLine($('stuck-best'), best);
+function showStuck(rec) {
+  $('stuck-score').textContent = `점수 ${rec.score}`;
+  $('stuck-rank').textContent = formatRank(rec.rank);
   $('stuck-overlay').hidden = false;
 }
+
+/* ── 기록 화면 ──
+   같은 모달을 두 경로에서 연다.
+   - 게임 끝(막힘·완전 제거) 직후 「기록 보기」: 방금 그 난이도로 고정,
+     탭 없음, 방금 기록이 있으면 그 줄을 강조하고 「지금 점수 — 등수」를 보여 준다.
+   - 메뉴 화면 「기록 보기」: 탭으로 네 난이도를 전환할 수 있고, 강조·현재
+     점수 줄은 없다. 처음 열 때는 하 난이도를 보여 준다.
+   닫기는 모달만 숨긴다 — body[data-screen]을 바꾸지 않으므로 있던
+   화면(메뉴 또는 게임 결과·막힘 화면) 그대로 돌아간다. */
+const recordsModalEl = $('records-modal');
+const recordsTabsEl = $('records-tabs');
+let recordsCtx = { source: 'menu', level: 'easy' };
+
+function renderRecords(level, opts = {}) {
+  const cfg = LEVELS[level];
+  const { records, plays } = getLevelRecords(level);
+
+  $('records-title').textContent = `${cfg.label} · 최고 기록`;
+  $('records-plays').textContent = plays > 0 ? `${plays}판 플레이` : '';
+
+  const listEl = $('records-list');
+  listEl.innerHTML = '';
+  const empty = records.length === 0;
+  $('records-empty').hidden = !empty;
+
+  for (let i = 0; i < records.length; i++) {
+    const r = records[i];
+    const li = document.createElement('li');
+    li.textContent = `${i + 1}. ${r.score}점  ${formatDate(r.at)}`;
+    if (opts.highlightAt && r.at === opts.highlightAt) li.classList.add('just-now');
+    listEl.appendChild(li);
+  }
+
+  const currentEl = $('records-current');
+  if (opts.currentScore != null) {
+    currentEl.hidden = false;
+    currentEl.textContent = `지금 점수 ${opts.currentScore} — ${formatRank(opts.currentRank)}`;
+  } else {
+    currentEl.hidden = true;
+  }
+}
+
+function updateRecordsTabsActive() {
+  for (const btn of recordsTabsEl.querySelectorAll('button')) {
+    btn.classList.toggle('active', btn.dataset.level === recordsCtx.level);
+  }
+}
+
+function openRecordsFromGame() {
+  const rec = state.lastRecord;
+  recordsCtx = { source: 'game', level: rec.level };
+  recordsTabsEl.hidden = true;
+  renderRecords(rec.level, { highlightAt: rec.at, currentScore: rec.score, currentRank: rec.rank });
+  recordsModalEl.hidden = false;
+}
+
+function openRecordsFromMenu() {
+  recordsCtx = { source: 'menu', level: recordsCtx.level };
+  recordsTabsEl.hidden = false;
+  updateRecordsTabsActive();
+  renderRecords(recordsCtx.level, {});
+  recordsModalEl.hidden = false;
+}
+
+for (const btn of recordsTabsEl.querySelectorAll('button')) {
+  btn.addEventListener('click', () => {
+    if (recordsCtx.source !== 'menu') return; // 게임 종료 경로에서는 난이도 고정
+    recordsCtx.level = btn.dataset.level;
+    updateRecordsTabsActive();
+    renderRecords(recordsCtx.level, {});
+  });
+}
+$('records-close').addEventListener('click', () => { recordsModalEl.hidden = true; });
 
 /* ── 배선 ── */
 for (const btn of document.querySelectorAll('.level-btn')) {
   btn.addEventListener('click', () => startGame(btn.dataset.level));
 }
+$('menu-records').addEventListener('click', openRecordsFromMenu);
 $('game-menu').addEventListener('click', () => setScreen('menu'));
 $('result-retry').addEventListener('click', () => startGame(state.level));
 $('result-menu').addEventListener('click', () => setScreen('menu'));
+$('result-records').addEventListener('click', openRecordsFromGame);
 $('stuck-retry').addEventListener('click', () => startGame(state.level));
 $('stuck-menu').addEventListener('click', () => setScreen('menu'));
+$('stuck-records').addEventListener('click', openRecordsFromGame);
 
 /* ── 레이아웃 갱신 ──
    resize/orientationchange + 타이머 대신 #board-wrap의 실제 크기 변화를

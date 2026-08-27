@@ -20,8 +20,9 @@
 </section>
 
 <section id="screen-menu" class="screen">
-  <h1>사과게임</h1>
-  <p class="lead">사각형 안 숫자의 합이 <b>10</b>이면 사과가 사라져요.<br>시간제한은 없어요.</p>
+  <h1>사과게임 (시간 무제한)</h1>
+  <p class="lead">사각형 안 숫자의 합이 <b>10</b>이면 사과가 사라져요.</p>
+  <button id="menu-records" type="button" class="link-btn">기록 보기</button>
   <div class="howto">
     <p class="howto-title">이렇게 해요</p>
     <ol>
@@ -50,6 +51,7 @@
 <section id="screen-game" class="screen">
   <header class="hud">
     <span id="hud-level"></span>
+    <span id="hud-score"></span>
     <span id="hud-cleared"></span>
     <button id="game-menu" type="button">그만두기</button>
   </header>
@@ -60,8 +62,9 @@
     <div id="stuck-overlay" hidden>
       <p class="stuck-title">더 이상 10을 만들 수 없어요</p>
       <p id="stuck-score"></p>
-      <p id="stuck-best" hidden></p>
+      <p id="stuck-rank"></p>
       <div class="stuck-actions">
+        <button id="stuck-records" type="button">기록 보기</button>
         <button id="stuck-retry" type="button">다시 하기</button>
         <button id="stuck-menu" type="button">난이도 고르기</button>
       </div>
@@ -73,12 +76,32 @@
   <img id="result-image" alt="">
   <h2 id="result-title"></h2>
   <p id="result-score"></p>
-  <p id="result-best" hidden></p>
+  <p id="result-rank"></p>
   <div class="result-actions">
+    <button id="result-records" type="button">기록 보기</button>
     <button id="result-retry" type="button">다시 하기</button>
     <button id="result-menu" type="button">난이도 고르기</button>
   </div>
 </section>
+
+<div id="records-modal" hidden>
+  <div class="records-panel">
+    <div id="records-tabs" class="records-tabs">
+      <button type="button" data-level="easy">하</button>
+      <button type="button" data-level="normal">중</button>
+      <button type="button" data-level="hard">상</button>
+      <button type="button" data-level="expert">최상</button>
+    </div>
+    <div class="records-header">
+      <h2 id="records-title"></h2>
+      <span id="records-plays"></span>
+    </div>
+    <p id="records-empty" hidden>아직 기록이 없어요</p>
+    <ol id="records-list"></ol>
+    <p id="records-current" hidden></p>
+    <button id="records-close" type="button">닫기</button>
+  </div>
+</div>
 
 <script type="module" src="js/main.js"></script>
 </body>
